@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hexaeight-agent"
-version = "1.6.803"
+version = "1.6.804"
 description = "HexaEight Agent - Python library for AI agent coordination, PubSub messaging, and task management"
 readme = "README.md"
 license = {text = "Apache-2.0"}
