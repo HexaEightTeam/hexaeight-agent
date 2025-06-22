@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DeviceId.Linux</name>
+    </assembly>
+    <members>
+        <member name="T:DeviceId.Linux.Components.DockerContainerIdComponent">
+            <summary>
+            An implementation of <see cref="T:DeviceId.IDeviceIdComponent"/> that uses the cgroup to read the Docker container id.
+            </summary>
+        </member>
+        <member name="F:DeviceId.Linux.Components.DockerContainerIdComponent._cGroupFile">
+            <summary>
+            The cgroup file.
+            </summary>
+        </member>
+        <member name="M:DeviceId.Linux.Components.DockerContainerIdComponent.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DeviceId.Linux.Components.DockerContainerIdComponent"/> class.
+            </summary>
+            <param name="cGroupFile">The cgroup file.</param>
+        </member>
+        <member name="M:DeviceId.Linux.Components.DockerContainerIdComponent.GetValue">
+            <summary>
+            Gets the component value.
+            </summary>
+            <returns>The component value.</returns>
+        </member>
+        <member name="T:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent">
+            <summary>
+            An implementation of <see cref="T:DeviceId.IDeviceIdComponent"/> that uses the root drive's serial number.
+            </summary>
+        </member>
+        <member name="F:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent._commandExecutor">
+            <summary>
+            Command executor.
+            </summary>
+        </member>
+        <member name="F:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent._jsonSerializerOptions">
+            <summary>
+            JSON serializer options.
+            </summary>
+        </member>
+        <member name="M:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent"/> class.
+            </summary>
+        </member>
+        <member name="M:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent.#ctor(DeviceId.Internal.CommandExecutors.ICommandExecutor)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent"/> class.
+            </summary>
+            <param name="commandExecutor">The command executor to use.</param>
+        </member>
+        <member name="M:DeviceId.Linux.Components.LinuxRootDriveSerialNumberDeviceIdComponent.GetValue">
+            <summary>
+            Gets the component value.
+            </summary>
+            <returns>The component value.</returns>
+        </member>
+        <member name="T:DeviceId.DeviceIdBuilderExtensions">
+            <summary>
+            Extension methods for <see cref="T:DeviceId.DeviceIdBuilder"/>.
+            </summary>
+        </member>
+        <member name="M:DeviceId.DeviceIdBuilderExtensions.OnLinux(DeviceId.DeviceIdBuilder,System.Action{DeviceId.LinuxDeviceIdBuilder})">
+            <summary>
+            Adds Linux-specific components to the device ID.
+            </summary>
+            <param name="builder">The device ID builder to add the components to.</param>
+            <param name="linuxBuilderConfiguration">An action that adds the Linux-specific components.</param>
+            <returns>The device ID builder.</returns>
+        </member>
+        <member name="T:DeviceId.LinuxDeviceIdBuilder">
+            <summary>
+            Provides a fluent interface for adding Linux-specific components to a device identifier.
+            </summary>
+        </member>
+        <member name="F:DeviceId.LinuxDeviceIdBuilder._baseBuilder">
+            <summary>
+            The base device identifier builder.
+            </summary>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilder.#ctor(DeviceId.DeviceIdBuilder)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> class.
+            </summary>
+            <param name="baseBuilder">The base device identifier builder.</param>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilder.AddComponent(System.String,DeviceId.IDeviceIdComponent)">
+            <summary>
+            Adds a component to the device identifier.
+            If a component with the specified name already exists, it will be replaced with this newly added component.
+            </summary>
+            <param name="name">The component name.</param>
+            <param name="component">The component to add.</param>
+            <returns>The builder instance.</returns>
+        </member>
+        <member name="T:DeviceId.LinuxDeviceIdBuilderExtensions">
+            <summary>
+            Extension methods for <see cref="T:DeviceId.LinuxDeviceIdBuilder"/>.
+            </summary>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddSystemDriveSerialNumber(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the system drive serial number to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddDockerContainerId(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the docker container id to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddMachineId(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the machine ID (from /var/lib/dbus/machine-id or /etc/machine-id) to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddProductUuid(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the product UUID (from /sys/class/dmi/id/product_uuid) to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddCpuInfo(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the CPU info (from /proc/cpuinfo) to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.LinuxDeviceIdBuilderExtensions.AddMotherboardSerialNumber(DeviceId.LinuxDeviceIdBuilder)">
+            <summary>
+            Adds the motherboard serial number (from /sys/class/dmi/id/board_serial) to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.LinuxDeviceIdBuilder"/> instance.</returns>
+        </member>
+    </members>
+</doc>

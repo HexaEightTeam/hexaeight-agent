@@ -1,0 +1,112 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hexaeight-agent"
+version = "1.6.800"
+description = "HexaEight Agent - Python library for AI agent coordination, PubSub messaging, and task management"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "HexaEight", email = "support@hexaeight.com"}
+]
+maintainers = [
+    {name = "HexaEight", email = "support@hexaeight.com"}
+]
+keywords = [
+    "hexaeight",
+    "agent", 
+    "pubsub",
+    "messaging",
+    "task-management",
+    "ai-coordination",
+    "multi-agent",
+    "identity",
+    "security"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Communications",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pythonnet>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.991"
+]
+examples = [
+    "asyncio",
+    "aiofiles"
+]
+
+[project.urls]
+Homepage = "https://github.com/hexaEightTeam/hexaeight-agent"
+Documentation = "https://github.com/hexaEightTeam/hexaeight-agent/blob/main/README.md"
+Repository = "https://github.com/hexaEightTeam/hexaeight-agent.git"
+"Bug Tracker" = "https://github.com/hexaEightTeam/hexaeight-agent/issues"
+Changelog = "https://github.com/hexaEightTeam/hexaeight-agent/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+packages = ["hexaeight_agent"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+hexaeight_agent = [
+    "dlls/*.dll",
+    "dlls/*.xml",
+    "*.md"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --tb=short"
+testpaths = [
+    "tests",
+]
+asyncio_mode = "auto"

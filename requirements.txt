@@ -1,0 +1,12 @@
+# Core dependencies for hexaeight-agent
+pythonnet>=3.0.0
+
+# Optional development dependencies (install with: pip install -e ".[dev]")
+# pytest>=6.0
+# pytest-asyncio>=0.21.0  
+# black>=22.0
+# flake8>=4.0
+# mypy>=0.991
+
+# Optional example dependencies (install with: pip install -e ".[examples]")
+# aiofiles

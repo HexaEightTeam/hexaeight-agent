@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DeviceId.Mac</name>
+    </assembly>
+    <members>
+        <member name="T:DeviceId.DeviceIdBuilderExtensions">
+            <summary>
+            Extension methods for <see cref="T:DeviceId.DeviceIdBuilder"/>.
+            </summary>
+        </member>
+        <member name="M:DeviceId.DeviceIdBuilderExtensions.OnMac(DeviceId.DeviceIdBuilder,System.Action{DeviceId.MacDeviceIdBuilder})">
+            <summary>
+            Adds Mac-specific components to the device ID.
+            </summary>
+            <param name="builder">The device ID builder to add the components to.</param>
+            <param name="macBuilderConfiguration">An action that adds the Mac-specific components.</param>
+            <returns>The device ID builder.</returns>
+        </member>
+        <member name="T:DeviceId.MacDeviceIdBuilder">
+            <summary>
+            Provides a fluent interface for adding Mac-specific components to a device identifier.
+            </summary>
+        </member>
+        <member name="F:DeviceId.MacDeviceIdBuilder._baseBuilder">
+            <summary>
+            The base device identifier builder.
+            </summary>
+        </member>
+        <member name="M:DeviceId.MacDeviceIdBuilder.#ctor(DeviceId.DeviceIdBuilder)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DeviceId.MacDeviceIdBuilder"/> class.
+            </summary>
+            <param name="baseBuilder">The base device identifier builder.</param>
+        </member>
+        <member name="M:DeviceId.MacDeviceIdBuilder.AddComponent(System.String,DeviceId.IDeviceIdComponent)">
+            <summary>
+            Adds a component to the device identifier.
+            If a component with the specified name already exists, it will be replaced with this newly added component.
+            </summary>
+            <param name="name">The component name.</param>
+            <param name="component">The component to add.</param>
+            <returns>The builder instance.</returns>
+        </member>
+        <member name="T:DeviceId.MacDeviceIdBuilderExtensions">
+            <summary>
+            Extension methods for <see cref="T:DeviceId.MacDeviceIdBuilder"/>.
+            </summary>
+        </member>
+        <member name="M:DeviceId.MacDeviceIdBuilderExtensions.AddSystemDriveSerialNumber(DeviceId.MacDeviceIdBuilder)">
+            <summary>
+            Adds the system drive serial number to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.MacDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.MacDeviceIdBuilder"/> instance.</returns>
+        </member>
+        <member name="M:DeviceId.MacDeviceIdBuilderExtensions.AddPlatformSerialNumber(DeviceId.MacDeviceIdBuilder)">
+            <summary>
+            Adds the platform serial number to the device identifier.
+            </summary>
+            <param name="builder">The <see cref="T:DeviceId.MacDeviceIdBuilder"/> to add the component to.</param>
+            <returns>The <see cref="T:DeviceId.MacDeviceIdBuilder"/> instance.</returns>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,32 @@
+# Include documentation and metadata files
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+
+# Include all DLL files and related libraries
+recursive-include hexaeight_agent/dlls *.dll
+recursive-include hexaeight_agent/dlls *.xml
+recursive-include hexaeight_agent/dlls *.pdb
+
+# Include Python source files
+include hexaeight_agent/*.py
+
+# Include package configuration
+include pyproject.toml
+include setup.cfg
+
+# Exclude development and build artifacts
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .git*
+global-exclude .DS_Store
+global-exclude *.egg-info/*
+
+# Exclude test files from distribution
+prune tests/
+prune examples/
+exclude test_*.py
