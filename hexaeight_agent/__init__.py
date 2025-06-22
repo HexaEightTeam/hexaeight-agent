@@ -84,7 +84,7 @@ from .hexaeight_agent import (
 )
 
 # Import global debug control functions
-from .hexaeight_agent import enable_library_debug, is_library_debug_enabled
+from .hexaeight_agent import enable_library_debug, is_library_debug_enabled, show_examples, get_demo_path, get_create_scripts_path
 
 # Expose availability flags
 from .hexaeight_agent import DOTNET_AVAILABLE, HEXAEIGHT_AGENT_AVAILABLE
@@ -127,6 +127,9 @@ __all__ = [
     # Global debug control
     "enable_library_debug",
     "is_library_debug_enabled",
+    "show_examples",
+    "get_demo_path",
+    "get_create_scripts_path",
     
     # Availability flags
     "DOTNET_AVAILABLE",
