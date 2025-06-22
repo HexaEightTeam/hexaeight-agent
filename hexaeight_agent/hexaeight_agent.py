@@ -1627,3 +1627,40 @@ def enable_library_debug(enabled: bool = True):
 def is_library_debug_enabled() -> bool:
     """Check if library debug mode is enabled."""
     return LIBRARY_DEBUG
+
+# ==================================================================================
+# EXAMPLE FILES ACCESS HELPER
+# ==================================================================================
+
+def show_examples():
+    """Shows how to access included example files."""
+    import os
+    import hexaeight_agent
+    
+    package_dir = os.path.dirname(hexaeight_agent.__file__)
+    demo_path = os.path.join(package_dir, "demo", "hexaeight_demo.py")
+    create_parent = os.path.join(package_dir, "create", "create-identity-for-parent-agent.csx")
+    create_child = os.path.join(package_dir, "create", "create-identity-for-child-agent.csx")
+    
+    print("🚀 HexaEight Agent - Included Examples:")
+    print(f"📁 Package location: {package_dir}")
+    print(f"🐍 Demo script: {demo_path}")
+    print(f"📜 Parent agent script: {create_parent}")
+    print(f"📜 Child agent script: {create_child}")
+    print("\nTo copy files to current directory:")
+    print(">>> import shutil")
+    print(f">>> shutil.copy('{demo_path}', '.')")
+
+def get_demo_path():
+    """Returns the path to the demo script."""
+    import os
+    import hexaeight_agent
+    package_dir = os.path.dirname(hexaeight_agent.__file__)
+    return os.path.join(package_dir, "demo", "hexaeight_demo.py")
+
+def get_create_scripts_path():
+    """Returns the path to the create scripts directory."""
+    import os
+    import hexaeight_agent
+    package_dir = os.path.dirname(hexaeight_agent.__file__)
+    return os.path.join(package_dir, "create")

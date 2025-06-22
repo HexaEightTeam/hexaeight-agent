@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hexaeight-agent"
-version = "1.6.800"
+version = "1.6.801"
 description = "HexaEight Agent - Python library for AI agent coordination, PubSub messaging, and task management"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -16,7 +16,7 @@ maintainers = [
 ]
 keywords = [
     "hexaeight",
-    "agent", 
+    "agent",
     "pubsub",
     "messaging",
     "task-management",
@@ -32,7 +32,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -61,11 +61,11 @@ examples = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hexaEightTeam/hexaeight-agent"
-Documentation = "https://github.com/hexaEightTeam/hexaeight-agent/blob/main/README.md"
-Repository = "https://github.com/hexaEightTeam/hexaeight-agent.git"
-"Bug Tracker" = "https://github.com/hexaEightTeam/hexaeight-agent/issues"
-Changelog = "https://github.com/hexaEightTeam/hexaeight-agent/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/HexaEightTeam/hexaeight-agent"
+Documentation = "https://github.com/HexaEightTeam/hexaeight-agent/blob/main/README.md"
+Repository = "https://github.com/HexaEightTeam/hexaeight-agent.git"
+"Bug Tracker" = "https://github.com/HexaEightTeam/hexaeight-agent/issues"
+Changelog = "https://github.com/HexaEightTeam/hexaeight-agent/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["hexaeight_agent"]
@@ -75,7 +75,9 @@ include-package-data = true
 hexaeight_agent = [
     "dlls/*.dll",
     "dlls/*.xml",
-    "*.md"
+    "*.md",
+    "demo/*.py",
+    "create/*.csx"
 ]
 
 [tool.black]
