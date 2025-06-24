@@ -40,7 +40,87 @@ Requirements:
     - HexaEight credentials and configuration
 """
 
-__version__ = "1.6.8"
+import os
+import platform
+import shutil
+from pathlib import Path
+
+def _setup_native_libraries():
+    """
+    Copy the appropriate native SQLite.Interop.dll based on the current OS and architecture.
+    This ensures SQLite native interop works correctly across different platforms.
+    """
+    try:
+        # Get the package directory
+        package_dir = Path(__file__).parent
+        dlls_dir = package_dir / "dlls"
+        
+        if not dlls_dir.exists():
+            print("⚠️ HexaEight Agent: DLLs directory not found, skipping native library setup")
+            return
+        
+        # Detect OS and architecture
+        system = platform.system().lower()
+        machine = platform.machine().lower()
+        
+        # Map to the correct subfolder
+        native_lib_map = {
+            ("windows", "amd64"): "win-x64",
+            ("windows", "x86_64"): "win-x64", 
+            ("windows", "x86"): "win-x86",
+            ("windows", "i386"): "win-x86",
+            ("linux", "x86_64"): "linux-x64",
+            ("linux", "amd64"): "linux-x64",
+            ("darwin", "x86_64"): "osx-x64",
+            ("darwin", "arm64"): "osx-x64",  # Use x64 version for Apple Silicon via Rosetta
+        }
+        
+        # Find the correct subfolder
+        subfolder = None
+        for (os_name, arch), folder in native_lib_map.items():
+            if system == os_name and (machine == arch or 
+                                    (arch == "amd64" and machine == "x86_64") or 
+                                    (arch == "x86_64" and machine == "amd64")):
+                subfolder = folder
+                break
+        
+        if not subfolder:
+            print(f"⚠️ HexaEight Agent: No native SQLite library found for {system}-{machine}")
+            print(f"Available options: {list(set(native_lib_map.values()))}")
+            return
+        
+        # Source and destination paths
+        source_dir = dlls_dir / subfolder
+        source_file = source_dir / "SQLite.Interop.dll"
+        dest_file = dlls_dir / "SQLite.Interop.dll"
+        
+        # Check if source exists
+        if not source_file.exists():
+            print(f"⚠️ HexaEight Agent: Native SQLite library not found: {source_file}")
+            return
+        
+        # Copy if destination doesn't exist or is different
+        should_copy = True
+        if dest_file.exists():
+            # Check if files are the same size (simple check)
+            if source_file.stat().st_size == dest_file.stat().st_size:
+                should_copy = False
+        
+        if should_copy:
+            shutil.copy2(source_file, dest_file)
+            print(f"✅ HexaEight Agent: Configured native SQLite library for {system}-{machine}")
+        # Only show success message in verbose mode to avoid spam
+        elif os.environ.get('HEXAEIGHT_VERBOSE'):
+            print(f"✅ HexaEight Agent: Native SQLite library ready for {system}-{machine}")
+            
+    except Exception as e:
+        print(f"⚠️ HexaEight Agent: Failed to setup native libraries: {e}")
+        print("SQLite operations may not work properly")
+
+# Setup native libraries on import - this happens automatically when package is imported
+_setup_native_libraries()
+
+__version__ = "1.6.805"
 __author__ = "HexaEight"
 __license__ = "Apache 2.0"
 
