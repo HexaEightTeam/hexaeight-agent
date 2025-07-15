@@ -1,7 +1,7 @@
 #!/usr/bin/env dotnet-script
 
 #r "nuget: Spectre.Console, 0.47.0"
-#r "nuget: HexaEightAgent, 1.6.846"
+#r "nuget: HexaEightAgent, 1.6.853"
 
 using System;
 using System.IO;
