@@ -1053,7 +1053,39 @@ class HexaEightAgent:
     # PUBSUB METHODS (unchanged)
     # ==================================================================================
     
-    async def connect_to_pubsub(self, pubsub_server_url: str, agent_type: str = "child") -> bool:
+    async def connect_to_pubsub(self, pubsub_server_url: str, agent_type: str = "child", max_attempts: int = 5) -> bool:
+        """Connect to PubSub server asynchronously with retry logic."""
+
+        for attempt in range(max_attempts):
+            try:
+                if attempt > 0:
+                    self.debug_log(f"🔄 PubSub connection attempt {attempt + 1}/{max_attempts}...")
+                else:
+                    self.debug_log(f"🔄 Connecting to PubSub server: {pubsub_server_url}")
+
+                task = self._clr_agent_config.ConnectToPubSubAsync(pubsub_server_url, agent_type)
+                result = await asyncio.get_event_loop().run_in_executor(None, lambda: task.Result)
+
+                if result:
+                    self._log_success(f"✅ Connected to PubSub server: {pubsub_server_url}")
+                    return True
+                else:
+                    self._log_error(f"❌ Connection attempt {attempt + 1} failed")
+
+            except Exception as e:
+                self._log_error(f"❌ Connection attempt {attempt + 1} error: {e}")
+
+            # Don't sleep after the last attempt
+            if attempt < max_attempts - 1:
+                delay = min(30, 2 ** attempt)  # Exponential backoff: 1s, 2s, 4s, 8s, 16s
+                self.debug_log(f"⏳ Retrying in {delay} seconds...")
+                await asyncio.sleep(delay)
+
+        self._log_error(f"❌ Failed to connect to PubSub server after {max_attempts} attempts")
+        return False
+
+
+    async def connect_to_pubsub2(self, pubsub_server_url: str, agent_type: str = "child") -> bool:
         """Connect to PubSub server asynchronously."""
         try:
             self.debug_log(f"Connecting to PubSub server: {pubsub_server_url}")
