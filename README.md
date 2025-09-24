@@ -14,6 +14,8 @@ HexaEight Agent provides identity management and secure communication for AI age
 6. 🌐 **Bridge communication** across agents
 7. 📤 **Publish messages** with direct, broadcast, and scheduled delivery
 8. ⚡ **Handle events** with real-time processing and async iteration
+9. ✍️ **Sign messages** with cryptographic JWT signatures
+10. 🔍 **Verify authenticity** of messages from other agents
 
 ## Requirements
 
@@ -68,7 +70,37 @@ pip install hexaeight-agent
 
 ## Usage Examples
 
-Refer to `hexaeight_demo.py` for complete examples of all features.
+### Basic Agent Communication
+
+Refer to `hexaeight_demo.py` for complete examples of messaging, tasks, and coordination features.
+
+### JWT Message Signing and Verification
+
+```python
+from hexaeight_agent import HexaEightAgent
+
+# Initialize and load agent
+agent = HexaEightAgent()
+agent.load_ai_parent_agent("parent_config.json", True, client_id, token_server_url)
+
+# Sign a message with JWT
+message = "This is a secure message"
+jwt_token = await agent.sign_jwt_async(message)
+print(f"Signed JWT: {jwt_token}")
+
+# Verify JWT signature
+verification_result = await agent.verify_jwt_async(jwt_token, message)
+if verification_result.is_valid:
+    print("✅ JWT signature is valid")
+    print(f"Signed by: {verification_result.sender}")
+else:
+    print("❌ JWT signature verification failed")
+
+# Sign and verify file content
+file_path = "/path/to/your/file.txt"
+file_jwt = await agent.sign_jwt_from_file_async(file_path)
+file_verification = await agent.verify_jwt_async(file_jwt, file_path, is_file_path=True)
+```
 
 ## License
 

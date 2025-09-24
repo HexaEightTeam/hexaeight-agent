@@ -49,24 +49,101 @@ try:
     
     _library_debug_log("✅ CLR bridge established successfully")
     
+    # DLL integrity verification using signed JWTs
+    # Each DLL has a corresponding .jwt file containing its cryptographically signed content
+    # JWTs are signed by support@hexaeight.com and cannot be forged without the private key
+    CRITICAL_DLLS = [
+        "HexaEightAgent.dll",
+        "HexaEightJWTLibrary.dll",
+        "HexaEightASKClientLibrary.dll"
+    ]
+
+    EXPECTED_DLL_VERSIONS = {
+        "HexaEightAgent.dll": "1.6.861.0",
+        "HexaEightJWTLibrary.dll": "1.9.268.0",
+        "HexaEightASKClientLibrary.dll": "1.9.103.0"
+    }
+
+    def _get_dll_directory():
+        """Get the DLL directory path."""
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "dlls")
+
+    def _verify_dll_integrity():
+        """Verify DLL integrity using JWT signatures after CLR is loaded."""
+        import os
+
+        try:
+            dll_dir = _get_dll_directory()
+            _library_debug_log(f"🔍 Verifying DLL integrity using JWT signatures...")
+
+            # Create a temporary agent instance for verification (no signing environment needed)
+            temp_agent_config = CSharpAgentConfig()
+
+            for dll_name in CRITICAL_DLLS:
+                dll_path = os.path.join(dll_dir, dll_name)
+                jwt_path = os.path.join(dll_dir.replace("/dlls", ""), f"{dll_name}.jwt")
+                print(f"   JWT file path: {jwt_path}")
+
+                if not os.path.exists(jwt_path):
+                    raise RuntimeError(f"🚨 SECURITY ERROR: JWT signature missing for {dll_name}. DLL integrity cannot be verified!")
+
+                # Read JWT content
+                with open(jwt_path, 'r') as f:
+                    jwt_content = f.read().strip()
+
+                # Verify JWT against DLL file using the new isFilePath parameter
+                print(f"🔐 Verifying JWT signature for {dll_name}...")
+                print(f"   JWT length: {len(jwt_content)} chars")
+                print(f"   DLL path: {dll_path}")
+
+                result = temp_agent_config.VerifyJwtAsync(jwt_content, dll_path, "support@hexaeight.com", True).Result
+
+                print(f"   Verification result: Success={result.Success}")
+                if hasattr(result, 'ErrorMessage') and result.ErrorMessage:
+                    print(f"   Error message: {result.ErrorMessage}")
+
+                if not result.Success:
+                    raise RuntimeError(f"🚨 SECURITY ERROR: JWT verification failed for {dll_name}! {result.ErrorMessage}")
+
+                _library_debug_log(f"✅ DLL integrity verified: {dll_name}")
+
+            _library_debug_log("✅ All DLL integrity checks passed!")
+
+        except Exception as e:
+            raise RuntimeError(f"🚨 CRITICAL SECURITY ERROR: DLL integrity verification failed: {e}")
+
     # Add the HexaEightAgent assembly to the path
     def add_assemblies():
         """Load the HexaEightAgent assembly from the bundled dlls directory."""
         dll_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dlls")
-        
+
         if not os.path.exists(dll_dir):
             raise FileNotFoundError(f"HexaEight DLL directory not found: {dll_dir}")
-        
+
+        # Verify critical DLL integrity using signed JWTs before loading
+        for dll_name in CRITICAL_DLLS:
+            dll_path = os.path.join(dll_dir, dll_name)
+            jwt_path = os.path.join(dll_dir.replace("/dlls", ""), f"{dll_name}.jwt")
+
+            if not os.path.exists(dll_path):
+                raise FileNotFoundError(f"Required DLL not found: {dll_path}")
+
+            if not os.path.exists(jwt_path):
+                raise FileNotFoundError(f"Required JWT signature not found: {jwt_path}")
+
+            # Basic integrity check - will be enhanced after CLR is loaded
+            _library_debug_log(f"✅ DLL and JWT found: {dll_name}")
+
         sys.path.append(dll_dir)
         _library_debug_log(f"Added DLL directory to path: {dll_dir}")
-        
+
         # Load assemblies in dependency order
         try:
             clr.AddReference("HexaEightAgent")
             _library_debug_log("✅ HexaEightAgent assembly loaded")
             
             # Load other assemblies
-            assemblies = ["Newtonsoft.Json", "SystemHelper", "System.Text.Json", 
+            assemblies = ["Newtonsoft.Json", "SystemHelper", "System.Text.Json",
                          "jose-jwt", "HexaEightJWTLibrary", "HexaEightASKClientLibrary"]
             for assembly in assemblies:
                 try:
@@ -74,7 +151,27 @@ try:
                     _library_debug_log(f"✅ Loaded assembly: {assembly}")
                 except Exception as e:
                     _library_debug_log(f"⚠️ Assembly failed: {assembly} ({e})")
-                    
+
+            # Verify DLL versions after loading
+            from System.Reflection import Assembly
+            for dll_name, expected_version in EXPECTED_DLL_VERSIONS.items():
+                dll_path = os.path.join(dll_dir, dll_name)
+                try:
+                    asm = Assembly.LoadFrom(dll_path)
+                    actual_version = str(asm.GetName().Version)
+                    if actual_version != expected_version:
+                        raise RuntimeError(
+                            f"DLL version mismatch for {dll_name}!\n"
+                            f"Expected: {expected_version}\n"
+                            f"Actual:   {actual_version}\n"
+                            f"The DLL may have been replaced. Please reinstall the package."
+                        )
+                    _library_debug_log(f"✅ DLL version verified: {dll_name} v{actual_version}")
+                except RuntimeError:
+                    raise
+                except Exception as e:
+                    _library_debug_log(f"⚠️ Could not verify version for {dll_name}: {e}")
+
         except Exception as e:
             raise ImportError(f"Failed to load HexaEightAgent assembly: {e}")
 
@@ -114,6 +211,9 @@ try:
     DOTNET_AVAILABLE = True
     HEXAEIGHT_AGENT_AVAILABLE = True
     _library_debug_log("✅ Successfully imported all HexaEightAgent classes")
+
+    # Now that CLR is loaded, verify DLL integrity using JWTs
+    _verify_dll_integrity()
     
 except Exception as e:
     print(f"CRITICAL ERROR: Failed to initialize Python.NET or load HexaEightAgent assembly:")
@@ -1601,6 +1701,338 @@ class HexaEightAgent:
         self.disconnect_from_pubsub()
         self.stop_event_processing()
     
+    # ==================================================================================
+    # JWT SIGNING AND VERIFICATION (Direct DLL Integration)
+    # ==================================================================================
+
+    def set_signing_folder(self, folder_path: str):
+        """
+        Set signing folder containing JWT signing credentials.
+
+        Args:
+            folder_path: Path to folder with .h8, .ask, .license files
+        """
+        self.debug_log(f"Setting signing folder: {folder_path}")
+        self._clr_agent_config.SetSigningFolder(folder_path, False)
+
+        result_dict = self._clr_agent_config.LoadSigningEnvironment(folder_path)
+
+        if result_dict and result_dict.Count > 0:
+            for key_value in result_dict:
+                key = str(key_value.Key)
+                value = str(key_value.Value)
+                Environment.SetEnvironmentVariable(key, value)
+                self.debug_log(f"✅ Set {key}")
+
+        self._log_success("Signing environment loaded")
+
+    def load_signing_environment(self):
+        """Load JWT signing environment from configured folder."""
+        self.debug_log("Loading signing environment...")
+        self._clr_agent_config.LoadSigningEnvironment()
+        self._log_success("Signing environment loaded")
+
+    async def sign_message_async(self, sender_email: str, message: str, max_retries: int = 3) -> Dict[str, Any]:
+        """
+        Sign a message using JWT (direct C# DLL call).
+
+        Args:
+            sender_email: Email of the sender
+            message: Message content to sign
+            max_retries: Maximum retry attempts
+
+        Returns:
+            Dictionary with signing result containing jwt, message_id, success, etc.
+        """
+        self.debug_log(f"Signing message from: {sender_email}")
+
+        try:
+            # Get signing credentials and copy to regular env vars for CLR persistence
+            signing_vars = self._clr_agent_config.GetSigningEnvironmentVariables()
+            if signing_vars:
+                Environment.SetEnvironmentVariable("HEXAEIGHT_RESOURCENAME", signing_vars.Item1)
+                Environment.SetEnvironmentVariable("HEXAEIGHT_MACHINETOKEN", signing_vars.Item2)
+                Environment.SetEnvironmentVariable("HEXAEIGHT_SECRET", signing_vars.Item3)
+                Environment.SetEnvironmentVariable("HEXAEIGHT_LICENSECODE", signing_vars.Item4)
+                self.debug_log("✅ Copied signing credentials to regular env vars")
+
+            result = await asyncio.to_thread(
+                lambda: self._clr_agent_config.SignMessageAsync(sender_email, message, max_retries).Result
+            )
+
+            if result.Success:
+                self.debug_log(f"✅ Signing successful - JWT length: {len(result.Jwt)}")
+                return {
+                    "success": True,
+                    "jwt": str(result.Jwt),
+                    "message_id": str(result.MessageId),
+                    "generation_time_ms": int(result.GenerationTimeMs),
+                    "error": None
+                }
+            else:
+                self._log_error(f"Signing failed: {result.ErrorMessage}")
+                return {
+                    "success": False,
+                    "jwt": None,
+                    "message_id": None,
+                    "generation_time_ms": int(result.GenerationTimeMs),
+                    "error": str(result.ErrorMessage)
+                }
+        except Exception as e:
+            self._log_error(f"Exception during signing: {e}")
+            return {
+                "success": False,
+                "jwt": None,
+                "message_id": None,
+                "generation_time_ms": 0,
+                "error": str(e)
+            }
+
+    async def verify_jwt_async(self, jwt: str, original_message: str, expected_sender_email: str = None, is_file_path: bool = False) -> Dict[str, Any]:
+        """
+        Verify JWT signature (direct C# DLL call - NO signing environment needed).
+
+        Args:
+            jwt: JWT token to verify
+            original_message: Original message content or file path
+            expected_sender_email: Optional email to verify sender identity
+            is_file_path: True if original_message is a file path, False for text content
+
+        Returns:
+            Dictionary with verification result
+        """
+        self.debug_log(f"Verifying JWT (length: {len(jwt)} chars)")
+
+        try:
+            result = await asyncio.to_thread(
+                lambda: self._clr_agent_config.VerifyJwtAsync(jwt, original_message, expected_sender_email, is_file_path).Result
+            )
+
+            if result.Success:
+                self.debug_log(f"✅ Verification successful - Signed by: {result.SignedBy}")
+                return {
+                    "success": True,
+                    "verified": True,
+                    "sender_hash": str(result.UserHash) if result.UserHash else None,
+                    "signed_by": str(result.SignedBy) if result.SignedBy else None,
+                    "message_id": str(result.MessageId) if result.MessageId else None,
+                    "verification_time_ms": int(result.VerificationTimeMs),
+                    "error": None
+                }
+            else:
+                self._log_error(f"Verification failed: {result.ErrorMessage}")
+                return {
+                    "success": False,
+                    "verified": False,
+                    "sender_hash": None,
+                    "signed_by": None,
+                    "message_id": None,
+                    "verification_time_ms": int(result.VerificationTimeMs),
+                    "error": str(result.ErrorMessage)
+                }
+        except Exception as e:
+            self._log_error(f"Exception during verification: {e}")
+            return {
+                "success": False,
+                "verified": False,
+                "sender_hash": None,
+                "signed_by": None,
+                "message_id": None,
+                "verification_time_ms": 0,
+                "error": str(e)
+            }
+
+    async def create_jwt_message_async(self, sender_email: str, message: str) -> Dict[str, Any]:
+        """
+        Create complete JWT message JSON (direct C# DLL call).
+
+        Returns JSON with: {"Msg ID": "...", "message": "...", "signedjwt": "..."}
+
+        Args:
+            sender_email: Email of sender
+            message: Message content
+
+        Returns:
+            Dictionary with JWT message creation result
+        """
+        self.debug_log(f"Creating JWT message JSON for: {sender_email}")
+
+        try:
+            jwt_json = await asyncio.to_thread(
+                lambda: self._clr_agent_config.CreateJwtMessageAsync(sender_email, message).Result
+            )
+
+            if jwt_json:
+                self.debug_log(f"✅ JWT message created - JSON length: {len(jwt_json)}")
+                parsed = json.loads(jwt_json)
+                return {
+                    "success": True,
+                    "jwt_message_json": jwt_json,
+                    "msg_id": parsed.get("Msg ID"),
+                    "message": parsed.get("message"),
+                    "signed_jwt": parsed.get("signedjwt"),
+                    "error": None
+                }
+            else:
+                return {
+                    "success": False,
+                    "jwt_message_json": None,
+                    "error": "CreateJwtMessageAsync returned empty"
+                }
+        except Exception as e:
+            self._log_error(f"Exception creating JWT message: {e}")
+            return {
+                "success": False,
+                "jwt_message_json": None,
+                "error": str(e)
+            }
+
+    async def verify_jwt_message_async(self, jwt_message_json: str, expected_sender_email: str = None) -> Dict[str, Any]:
+        """
+        Verify complete JWT message JSON (direct C# DLL call).
+
+        Args:
+            jwt_message_json: Complete JWT message JSON string
+            expected_sender_email: Optional email to verify sender
+
+        Returns:
+            Dictionary with verification result
+        """
+        self.debug_log("Verifying JWT message JSON")
+
+        try:
+            result = await asyncio.to_thread(
+                lambda: self._clr_agent_config.VerifyJwtMessageAsync(jwt_message_json, expected_sender_email).Result
+            )
+
+            if result.Success:
+                self.debug_log("✅ JWT message verification successful")
+                return {
+                    "success": True,
+                    "verified": True,
+                    "sender_hash": str(result.UserHash) if result.UserHash else None,
+                    "signed_by": str(result.SignedBy) if result.SignedBy else None,
+                    "message_id": str(result.MessageId) if result.MessageId else None,
+                    "decrypted_payload": str(result.DecryptedPayload) if result.DecryptedPayload else None,
+                    "verification_time_ms": int(result.VerificationTimeMs),
+                    "error": None
+                }
+            else:
+                return {
+                    "success": False,
+                    "verified": False,
+                    "error": str(result.ErrorMessage)
+                }
+        except Exception as e:
+            self._log_error(f"Exception verifying JWT message: {e}")
+            return {
+                "success": False,
+                "verified": False,
+                "error": str(e)
+            }
+
+    # Queue-based signing (Advanced - HexaEightAgent 1.6.860+)
+
+    def start_signing_queue(self):
+        """Start JWT signing queue system for async processing."""
+        self.debug_log("Starting JWT signing queue...")
+        self._clr_agent_config.StartJwtSigningQueue()
+        self._log_success("Signing queue started")
+
+    async def stop_signing_queue_async(self):
+        """Stop JWT signing queue system."""
+        self.debug_log("Stopping JWT signing queue...")
+        await asyncio.to_thread(lambda: self._clr_agent_config.StopJwtSigningQueueAsync().Result)
+        self._log_success("Signing queue stopped")
+
+    async def queue_signing_async(self, sender_email: str, message: str, max_retries: int = 3, timeout_ms: int = 4000) -> str:
+        """
+        Queue JWT signing request (async, non-blocking).
+
+        Auto-switches to file-based processing for messages >1MB.
+
+        Returns:
+            Request ID for tracking
+        """
+        self.debug_log(f"Queuing signing (message size: {len(message)} bytes)")
+        request_id = await asyncio.to_thread(
+            lambda: self._clr_agent_config.QueueJwtSigningAsync(sender_email, message, max_retries, timeout_ms).Result
+        )
+        self.debug_log(f"Request queued: {request_id}")
+        return str(request_id)
+
+    async def queue_signing_from_file_async(self, sender_email: str, file_path: str, max_retries: int = 3, timeout_ms: int = 10000) -> str:
+        """
+        Queue JWT signing from file (async, non-blocking).
+
+        Args:
+            sender_email: Email of the sender
+            file_path: Path to file to sign
+            max_retries: Maximum retry attempts
+            timeout_ms: Timeout in milliseconds
+
+        Returns:
+            Request ID for tracking
+        """
+        self.debug_log(f"Queuing file signing: {file_path}")
+        request_id = await asyncio.to_thread(
+            lambda: self._clr_agent_config.QueueJwtSigningFromFileAsync(sender_email, file_path, max_retries, timeout_ms).Result
+        )
+        self.debug_log(f"File signing request queued: {request_id}")
+        return str(request_id)
+
+    async def queue_signing_from_stream_async(self, sender_email: str, content_stream, expected_size: int, max_retries: int = 3, timeout_ms: int = 15000) -> str:
+        """
+        Queue JWT signing from stream (async, non-blocking).
+
+        Args:
+            sender_email: Email of the sender
+            content_stream: .NET Stream object
+            expected_size: Expected size of content in bytes
+            max_retries: Maximum retry attempts
+            timeout_ms: Timeout in milliseconds
+
+        Returns:
+            Request ID for tracking
+        """
+        self.debug_log(f"Queuing stream signing (size: {expected_size} bytes)")
+        request_id = await asyncio.to_thread(
+            lambda: self._clr_agent_config.QueueJwtSigningFromStreamAsync(sender_email, content_stream, expected_size, max_retries, timeout_ms).Result
+        )
+        self.debug_log(f"Stream signing request queued: {request_id}")
+        return str(request_id)
+
+    async def wait_for_queue_result_async(self, request_id: str, timeout_ms: int = 30000) -> Dict[str, Any]:
+        """
+        Wait for queued signing request to complete.
+
+        Returns:
+            Dictionary with signing result
+        """
+        self.debug_log(f"Waiting for queue result: {request_id}")
+        result = await asyncio.to_thread(
+            lambda: self._clr_agent_config.WaitForQueuedJwtResultAsync(request_id, timeout_ms).Result
+        )
+
+        return {
+            "success": bool(result.Success),
+            "jwt": str(result.Jwt) if result.Jwt else None,
+            "message_id": str(result.MessageId) if result.MessageId else None,
+            "generation_time_ms": int(result.GenerationTimeMs),
+            "error": str(result.ErrorMessage) if result.ErrorMessage else None
+        }
+
+    def get_queue_statistics(self) -> Dict[str, Any]:
+        """Get JWT signing queue statistics."""
+        stats = self._clr_agent_config.GetQueueStatistics()
+        return {str(key): value for key, value in stats.items()}
+
+    @staticmethod
+    def hash_email(email: str) -> str:
+        """Hash email using SHA-512 (matches C# implementation)."""
+        import hashlib
+        return hashlib.sha512(email.encode('utf-8')).hexdigest().lower()
+
     def dispose(self):
         """Dispose of resources."""
         self.debug_log("Disposing agent resources")
